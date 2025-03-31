@@ -1,4 +1,4 @@
 # Billumy
 
 
-Modelo de LLM para integrar a um dashboard
+LLM para interpretação de dados e geraçãos de insights.
