@@ -1,0 +1,18 @@
+services:
+  billumy:
+    image: ollama/ollama:latest
+    container_name: billumy
+    restart: unless-stopped
+    ports:
+      - "11414:11414"
+    volumes:
+      - billumy_data:/root/.billumy
+    networks:
+      - billumy_network
+      
+volumes:
+  billumy_data:
+
+networks:
+  billumy_network:
+    driver: bridge
