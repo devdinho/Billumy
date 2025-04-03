@@ -1,18 +1,28 @@
 services:
   billumy:
-    image: ollama/ollama:latest
+    build: .
     container_name: billumy
-    restart: unless-stopped
     ports:
       - "11414:11414"
-    volumes:
-      - billumy_data:/root/.billumy
+    restart: always
     networks:
-      - billumy_network
-      
-volumes:
-  billumy_data:
+      - chat-network
+  nginx:
+    image: nginx
+    volumes:
+      - ./nginx.conf.template:/etc/nginx/nginx.conf.template
+      - ./nginx-entrypoint.sh:/docker-entrypoint.d/nginx-entrypoint.sh
+    entrypoint: ["/docker-entrypoint.d/nginx-entrypoint.sh"]
+    environment:
+      - BILLUMY_AUTH_TOKEN=${BILLUMY_AUTH_TOKEN}
+    ports:
+      - "8080:80"
+      - "8443:443"
+    depends_on:
+      - billumy
+    networks:
+      - chat-network
 
 networks:
-  billumy_network:
+  chat-network:
     driver: bridge

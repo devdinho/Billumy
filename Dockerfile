@@ -4,10 +4,10 @@ RUN apt update && apt install -y curl git iproute2 net-tools
 
 RUN curl -fsSL https://ollama.com/install.sh | sh
 
-ENV OLLAMA_HOST=0.0.0.0:11414
-
-RUN ollama serve & sleep 5 && ollama pull llama3
+WORKDIR /app
+COPY Modelfile /app/Modelfile
+COPY entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
 
 EXPOSE 11414
-
-CMD ["ollama", "serve"]
+CMD ["/app/entrypoint.sh"]
