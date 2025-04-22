@@ -1,6 +1,5 @@
 from fastapi import APIRouter, Request, Header, HTTPException, Depends
 from fastapi.responses import StreamingResponse
-from motor.motor_asyncio import AsyncIOMotorDatabase
 
 from models.chat import ChatCreate, ChatInDB, ChatUpdate, GenTitle
 
