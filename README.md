@@ -1,59 +1,86 @@
 # 📊 Billumy
 
-**Billumy** é um serviço baseado em **Modelos de Linguagem de Última Geração (LLMs)** para interpretação de dados e geração de insights acionáveis. Ele recebe mensagens de um sistema externo (um backend Django) e retorna respostas processadas pelo modelo.
+**Billumy** é um serviço baseado em **Modelos de Linguagem de Última Geração (LLMs)** para interpretação de dados e geração de insights acionáveis. Ele atua como intermediário inteligente entre sistemas externos (como um backend Django) e um modelo de linguagem, fornecendo respostas contextualizadas a partir de prompts.
+
+---
 
 ## 🚀 Funcionalidades
 
-- 🔍 **Interpretação de Dados**: Analisa consultas e retorna respostas contextuais.  
-- 🤖 **Processamento via LLMs**: Conecta-se a modelos de linguagem para gerar insights.  
-- 🔗 **Integração via API**: Projetado para ser consumido por outros serviços.  
-- ⚡ **Escalável com Docker e Nginx**: Fácil de implantar e gerenciar.  
+- 🔍 **Interpretação de Dados**  
+  Compreende e responde a perguntas com base em contexto fornecido via prompt.
+
+- 🤖 **Processamento com LLMs**  
+  Utiliza modelos de linguagem para gerar respostas ricas e precisas.
+
+- 🔗 **API Integrável**  
+  Ideal para ser consumido por outras aplicações via requisições HTTP.
+
+- ⚡ **Escalável com Docker & Nginx**  
+  Deploy facilitado com arquitetura modular em containers.
+
+---
 
 ## 🏗 Arquitetura
 
-O sistema é composto por dois componentes principais:
+O sistema é composto por três serviços principais:
 
-1. **Billumy** (API do modelo de linguagem)  
-2. **Nginx** (Proxy reverso para direcionar requisições)  
+1. **Billumy** — API responsável pela comunicação com o modelo de linguagem  
+2. **Billumy Service** — FastAPI que gerencia as requisições e conversa com MongoDB e Redis  
+3. **Nginx** — Proxy reverso responsável pela autenticação e roteamento  
 
-🔗 **A aplicação Django e o banco de dados são externos**, consumindo a API da Billumy.
+🔌 A aplicação Django e o banco de dados principal rodam fora do projeto e se conectam à API da Billumy para obter insights.
+
+---
 
 ## 🛠 Tecnologias Utilizadas
 
-- **Ollama** (Para execução dos modelos de linguagem)  
-- **Nginx** (Proxy reverso para segurança e roteamento)  
-- **Docker & Docker Compose** (Para deploy e gerenciamento de containers)  
+- **[FastAPI](https://fastapi.tiangolo.com/)**  
+- **[Ollama](https://ollama.com/)** (execução de modelos LLM localmente)  
+- **MongoDB** (armazenamento das conversas)  
+- **Redis** (cache e controle de contexto)  
+- **Nginx** (roteamento e segurança)  
+- **Docker & Docker Compose** (ambiente isolado e replicável)  
 
-## 📦 Instalação e Configuração
+---
 
-### 1️⃣ Clonando o repositório  
+## ⚙️ Instalação
+
+### 1️⃣ Clone o repositório  
 ```bash
 git clone https://github.com/devdinho/Billumy.git
 cd Billumy
 ```
 
-### 2️⃣ Configuração do ambiente  
-Crie um arquivo `.env` e defina as variáveis necessárias:
-```ini
-BILLUMY_API_KEY=seu_token_secreto
+### 2️⃣ Variáveis de ambiente  
+Crie um arquivo `.env` com as configurações necessárias:
+
+```env
+MONGO_URL=mongodb://billumy-mongo:27017
+REDIS_URL=redis://billumy-redis:6379
+BILLUMY_URL=http://billumy:11414
 ```
 
-### 3️⃣ Subindo os containers  
+### 3️⃣ Build e execução dos containers  
 ```bash
 docker compose up -d --build
 ```
 
-### 4️⃣ Acessando o serviço  
-Após iniciar os containers, o Billumy estará rodando em:
+---
+
+## 🌐 Acesso
+
+Após subir os containers, a aplicação estará disponível em:  
 ```
-http://localhost:8080
+http://localhost:8011
 ```
 
-## 🔗 Como consumir a API
+---
 
-### 🔹 Enviar uma mensagem para o modelo  
+## 📡 Uso da API
+
+### 🔹 Enviar um prompt para o modelo
 ```bash
-curl -X POST "http://localhost:8080/api/generate" \
+curl -X POST "http://localhost:8011/api/generate" \
      -H "Authorization: Bearer seu_token_secreto" \
      -H "Content-Type: application/json" \
      -d '{
@@ -62,48 +89,31 @@ curl -X POST "http://localhost:8080/api/generate" \
            "stream": false
          }'
 ```
-📍 **Resposta esperada:**  
+
+### 📥 Exemplo de resposta
 ```json
 {
   "model": "billumy",
-  "created_at": "2025-04-03T02:42:49.393042808Z",
-  "response": "Anderson! É um prazer conhecê-lo! Como você é o criador, posso dizer que estou animada para
-    trabalhar com você e fornecer informações precisas e úteis. Qual é o objetivo da nossa conversa hoje? 
-    Você em alguma pergunta ou necessidade específica que eu possa ajudar a resolver? Estou aqui para atender 
-    às suas necessidades!",
+  "created_at": "2025-04-03T02:42:49.393Z",
+  "response": "Anderson! É um prazer conhecê-lo! Como você é o criador...",
   "done": true,
   "done_reason": "stop",
-  "context": [
-    128006,
-    9125,
-    128007,
-    ...
-    271
-  ],
+  "context": [...],
   "total_duration": 16049257639,
-  "load_duration": 3826464531,
   "prompt_eval_count": 60,
-  "prompt_eval_duration": 1938382879,
-  "eval_count": 84,
-  "eval_duration": 10283553776
+  "eval_count": 84
 }
 ```
 
-## 📌 Configuração do Nginx
+## 🔐 Segurança
 
-O **Nginx** dentro do container já está configurado para:
-- Redirecionar requisições para a **Billumy**.
-- Exigir um **token de autenticação** para acessar a API.
-
-Se necessário, ajuste o `nginx.conf` no repositório para modificar o comportamento.
-
-## 🛡 Segurança
-
-- O serviço só pode ser acessado via **HTTP** no domínio `localhost:8080`.  
-- O **token de autenticação** deve ser incluído no cabeçalho da requisição.  
-
-## 📜 Licença  
-
-Este projeto está licenciado sob a **MIT License**. Consulte o arquivo [`LICENSE`](LICENSE) para mais detalhes.  
+- Requisições só são aceitas com **token válido** no header  
+- Comunicação feita localmente por padrão (`localhost:8011`)  
+- Pode ser facilmente adaptado para HTTPS com certificados
 
 ---
+
+## 📄 Licença
+
+Este projeto está licenciado sob a **MIT License**.  
+Confira o arquivo [`LICENSE`](LICENSE) para mais informações.

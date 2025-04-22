@@ -1,28 +1,58 @@
 services:
   billumy:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerbillumy
     container_name: billumy
     ports:
       - "11414:11414"
     restart: always
     networks:
       - chat-network
-  nginx:
-    image: nginx
-    volumes:
-      - ./nginx.conf.template:/etc/nginx/nginx.conf.template
-      - ./nginx-entrypoint.sh:/docker-entrypoint.d/nginx-entrypoint.sh
-    entrypoint: ["/docker-entrypoint.d/nginx-entrypoint.sh"]
-    environment:
-      - BILLUMY_AUTH_TOKEN=${BILLUMY_AUTH_TOKEN}
+
+  billumy-service:
+    build:
+      context: .
+      dockerfile: Dockerservice
+    container_name: billumy-service
     ports:
-      - "8080:80"
-      - "8443:443"
-    depends_on:
-      - billumy
+      - "8011:8011"
+    restart: always
     networks:
       - chat-network
+    volumes:
+      - ./service:/service
+    depends_on:
+      - billumy
+      - billumy-mongo
+      - billumy-redis
+
+  billumy-mongo:
+    image: mongo:latest
+    container_name: billumy-mongo
+    ports:
+      - "27017:27017"
+    restart: always
+    networks:
+      - chat-network
+    volumes:
+      - billumy-mongo-data:/data/db
+
+  billumy-redis:
+    image: redis:latest
+    container_name: billumy-redis
+    ports:
+      - "6379:6379"
+    restart: always
+    networks:
+      - chat-network
+    volumes:
+      - billumy-redis-data:/data
 
 networks:
   chat-network:
     driver: bridge
+
+volumes:
+  billumy-mongo-data:
+  billumy-redis-data:
