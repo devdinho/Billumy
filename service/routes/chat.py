@@ -6,21 +6,24 @@ from models.chat import ChatCreate, ChatInDB, ChatUpdate, GenTitle
 from db.mongo import chat_collection
 
 from typing import AsyncGenerator, Optional
+from dotenv import load_dotenv
 from datetime import datetime
 import httpx
 import os
 
-def verificar_token(authorization: str = Header(...)):
-    if authorization != f"Bearer {BILLUMY_API_KEY}":
-        raise HTTPException(status_code=401, detail="Token inválido")
-    
-router = APIRouter(prefix="/chats", tags=["Chats"], dependencies=[Depends(verificar_token)])
+load_dotenv()
 
 billumy_url = os.getenv("BILLUMY_URL", "http://billumy:11414")
 
 LLM_URL = "{}/api/chat".format(billumy_url)
 
 BILLUMY_API_KEY = os.getenv("BILLUMY_API_KEY", "insecure_token")
+
+def verificar_token(authorization: str = Header(...)):
+    if authorization != f"Bearer {BILLUMY_API_KEY}":
+        raise HTTPException(status_code=401, detail="Token inválido")
+    
+router = APIRouter(prefix="/chats", tags=["Chats"], dependencies=[Depends(verificar_token)])
     
 @router.post("/", response_model=ChatInDB)
 async def create_chat(chat: ChatCreate):
