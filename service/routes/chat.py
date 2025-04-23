@@ -10,11 +10,18 @@ from datetime import datetime
 import httpx
 import os
 
-router = APIRouter(prefix="/chats", tags=["Chats"])
+def verificar_token(authorization: str = Header(...)):
+    if authorization != f"Bearer {BILLUMY_API_KEY}":
+        raise HTTPException(status_code=401, detail="Token inválido")
+    
+router = APIRouter(prefix="/chats", tags=["Chats"], dependencies=[Depends(verificar_token)])
 
 billumy_url = os.getenv("BILLUMY_URL", "http://billumy:11414")
+
 LLM_URL = "{}/api/chat".format(billumy_url)
 
+BILLUMY_API_KEY = os.getenv("BILLUMY_API_KEY", "insecure_token")
+    
 @router.post("/", response_model=ChatInDB)
 async def create_chat(chat: ChatCreate):
     chat_db = ChatInDB(user_id=chat.user_id, data=chat.data)
