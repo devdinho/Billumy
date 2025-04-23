@@ -2,7 +2,7 @@
 
 set -e
 
-export OLLAMA_HOST=0.0.0.0:11434
+export OLLAMA_HOST=0.0.0.0:11414
 
 ollama serve &
 until ollama list > /dev/null 2>&1; do
