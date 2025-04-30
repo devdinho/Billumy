@@ -14,7 +14,7 @@ billumy_url = os.getenv("BILLUMY_URL", "http://billumy:11414")
  
 @app.get("/")
 async def billumy_healthcheck():
-    async with httpx.AsyncClient() as client:
+    async with httpx.AsyncClient(timeout=30.0) as client:
         response = await client.get(f"{billumy_url}")
         if response.status_code == 200:
             return {"status": "Billumy is up 🚀"}
