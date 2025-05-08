@@ -73,6 +73,56 @@ Após subir os containers, a aplicação estará disponível em:
 http://localhost:8011
 ```
 
+## 🚀 Endpoints e Payloads
+
+### Endpoint: `chats/chat/stream`
+
+#### Exemplo de Payload
+```json
+{
+  "model": "billumy",
+  "messages": [
+    {
+      "role": "system",
+      "content": "Você é um assistente útil."
+    },
+    {
+      "role": "user",
+      "content": "Quais foram meus maiores gastos este mês?"
+    }
+  ]
+}
+```
+
+#### Exemplo de Resposta
+```json
+{
+  "id": "e9cbc446026341f6819d675d5a01a445",
+  "user_id": "1",
+  "title": null,
+  "created_at": "2025-04-28T00:27:48.180000",
+  "updated_at": "2025-04-28T00:28:07.572000",
+  "data": {
+    "model": "billumy",
+    "messages": [
+      {
+        "role": "system",
+        "content": "Você está interagindo com um assistente de IA."
+      },
+      {
+        "role": "user",
+        "content": "Qual é o clima hoje?"
+      },
+      {
+        "role": "assistant",
+        "content": "O clima hoje está ensolarado com 28°C."
+      }
+    ],
+    "stream": true
+  }
+}
+```
+
 ## 🔐 Segurança
 
 - Requisições só são aceitas com **token válido** no header  
