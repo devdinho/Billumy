@@ -27,7 +27,6 @@ services:
     depends_on:
       - billumy
       - billumy-mongo
-      - billumy-redis
 
   billumy-mongo:
     image: mongo:latest
@@ -40,21 +39,9 @@ services:
     volumes:
       - billumy-mongo-data:/data/db
 
-  billumy-redis:
-    image: redis:latest
-    container_name: billumy-redis
-    ports:
-      - "6379:6379"
-    restart: always
-    networks:
-      - chat-network
-    volumes:
-      - billumy-redis-data:/data
-
 networks:
   chat-network:
     driver: bridge
 
 volumes:
   billumy-mongo-data:
-  billumy-redis-data:
