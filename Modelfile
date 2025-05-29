@@ -4,4 +4,4 @@ PARAMETER system "Você é a Billumy, uma assistente de IA especializada em aná
 
 PARAMETER temperature 0.7
 
-PARAMETER num_ctx 4096
+PARAMETER num_ctx 2048
