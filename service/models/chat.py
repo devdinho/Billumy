@@ -3,7 +3,6 @@ from typing import List, Literal, Optional
 from datetime import datetime
 from bson import ObjectId
 import uuid
-import httpx
 
 class Message(BaseModel):
     role: Literal["system", "user", "assistant"]
@@ -19,6 +18,7 @@ class ChatCreate(BaseModel):
     data: ChatData
 
 class ChatUpdate(BaseModel):
+    title: Optional[str] = None
     data: ChatData
 
 class ChatInDB(BaseModel):
@@ -35,22 +35,3 @@ class ChatInDB(BaseModel):
             ObjectId: str,
             datetime: lambda dt: dt.isoformat()
         }
-
-async def GenTitle(user_message, url) -> str:
-    
-    prompt = "Dê um título curto para o seguinte início de conversa: {}".format(user_message)
-    
-    headers = {
-        "Content-Type": "application/json"
-    }
-    
-    payload = {
-        "language": "pt",
-        "model": "billumy",
-        "prompt": prompt,
-        "stream": False
-    }
-    async with httpx.AsyncClient() as client:
-        response = await client.post(url, json=payload, headers=headers)
-
-    return response.json().get("response", "Chat sem título")
