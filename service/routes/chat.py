@@ -87,13 +87,21 @@ async def generate_chat_title(request: Request, authorization: Optional[str] = H
 @router.post("/stream")
 async def stream_chat(request: Request, authorization: Optional[str] = Header(None)):
     body = await request.json()
-
     headers = {
         "Authorization": authorization,
         "Content-Type": "application/json"
     }
-    
+
+    try:
+        client = httpx.AsyncClient(timeout=httpx.Timeout(10.0))
+        response = await client.post(LLM_URL, json=body, headers=headers)
+        response.raise_for_status()
+        await client.aclose()
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"Erro ao contatar LLM: {str(e)}")
+
     return StreamingResponse(llm_response_stream(body=body, headers=headers), media_type="text/plain")
+
 
 async def llm_response_stream(body, headers, llm_url=LLM_URL) -> AsyncGenerator[str, None]:
     async with httpx.AsyncClient() as client:
