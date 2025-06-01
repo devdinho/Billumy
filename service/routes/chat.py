@@ -8,10 +8,14 @@ from db.mongo import chat_collection
 from typing import AsyncGenerator, Optional
 from dotenv import load_dotenv
 from datetime import datetime
+
+import logging
 import httpx
 import os
 
 load_dotenv()
+
+logger = logging.getLogger(__name__)
 
 billumy_url = os.getenv("BILLUMY_URL", "http://billumy:11414")
 
@@ -104,7 +108,23 @@ async def stream_chat(request: Request, authorization: Optional[str] = Header(No
 
 
 async def llm_response_stream(body, headers, llm_url=LLM_URL) -> AsyncGenerator[str, None]:
-    async with httpx.AsyncClient() as client:
-        async with client.stream("POST", llm_url, json=body, headers=headers) as response:
-            async for chunk in response.aiter_text():
-                yield chunk
+    timeout = httpx.Timeout(60.0)  # tempo aumentado para modelos demorados
+    try:
+        logger.info(f"Requisitando {llm_url}")
+        async with httpx.AsyncClient(timeout=timeout) as client:
+            async with client.stream("POST", llm_url, json=body, headers=headers) as response:
+                response.raise_for_status()
+                async for chunk in response.aiter_text():
+                    yield chunk
+    except ReadTimeout:
+        logger.warning("Timeout na chamada ao LLM.")
+        yield "[ERRO] Tempo de resposta do LLM esgotado.\n"
+    except HTTPStatusError as e:
+        logger.warning(f"Erro HTTP ao acessar o LLM: {e.response.status_code}")
+        yield f"[ERRO] LLM retornou erro {e.response.status_code}.\n"
+    except RequestError as e:
+        logger.warning(f"Erro de requisição ao LLM: {str(e)}")
+        yield f"[ERRO] Problema na comunicação com o LLM: {str(e)}\n"
+    except Exception as e:
+        logger.exception("Erro inesperado ao chamar o LLM")
+        yield f"[ERRO] Erro inesperado: {str(e)}\n"
