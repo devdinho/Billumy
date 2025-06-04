@@ -7,5 +7,3 @@ services:
     ports:
       - "11414:11414"
     restart: always
-    networks:
-      - chat-network
