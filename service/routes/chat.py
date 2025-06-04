@@ -11,6 +11,8 @@ from datetime import datetime
 
 import logging
 import httpx
+from httpx import ReadTimeout, RequestError
+
 import os
 
 load_dotenv()
@@ -97,7 +99,7 @@ async def stream_chat(request: Request, authorization: Optional[str] = Header(No
     }
 
     try:
-        client = httpx.AsyncClient(timeout=httpx.Timeout(10.0))
+        client = httpx.AsyncClient(timeout=httpx.Timeout(60.0))
         response = await client.post(LLM_URL, json=body, headers=headers)
         response.raise_for_status()
         await client.aclose()
