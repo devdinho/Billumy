@@ -26,12 +26,6 @@ jobs:
             git checkout .
             git pull origin main -f
 
-            rm -f .env
-            echo "MONGO_URL=${{ secrets.MONGO_URL }}" >> .env
-            echo "REDIS_URL=${{ secrets.REDIS_URL }}" >> .env
-            echo "BILLUMY_URL=${{ secrets.BILLUMY_URL }}" >> .env
-            echo "BILLUMY_API_KEY=${{ secrets.BILLUMY_API_KEY }}" >> .env
-
             docker compose up --build -d
 
             sudo systemctl restart nginx
