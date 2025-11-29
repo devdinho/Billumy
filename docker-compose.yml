@@ -2,8 +2,10 @@ services:
   billumy:
     build:
       context: .
-      dockerfile: Dockerbillumy
+      dockerfile: Dockerfile
     container_name: billumy
     ports:
       - "11414:11414"
     restart: always
+    environment:
+      - OLLAMA_HOST=0.0.0.0:11414

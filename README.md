@@ -1,137 +1,160 @@
-# 📊 Billumy
+![Billumy-logo](https://portifolio.dinho.dev/media/projetos/Billumy_site.png)
 
-**Billumy** é um serviço baseado em **Modelos de Linguagem de Última Geração (LLMs)** para interpretação de dados e geração de insights acionáveis. Ele atua como intermediário inteligente entre sistemas externos (como um backend Django) e um modelo de linguagem, fornecendo respostas contextualizadas a partir de prompts.
+# 🧠 Billumy – Assistente de IA com Ollama
 
----
+### Modelos customizados, embeddings e arquitetura segura com Nginx + NMS
 
-## 🚀 Funcionalidades
-
-- 🔍 **Interpretação de Dados**  
-  Compreende e responde a perguntas com base em contexto fornecido via prompt.
-
-- 🤖 **Processamento com LLMs**  
-  Utiliza modelos de linguagem para gerar respostas ricas e precisas.
-
-- 🔗 **API Integrável**  
-  Ideal para ser consumido por outras aplicações via requisições HTTP.
-
-- ⚡ **Escalável com Docker & Nginx**  
-  Deploy facilitado com arquitetura modular em containers.
+A **Billumy** é uma assistente de IA especializada em análise de dados, construída sobre modelos **Qwen 2.5** personalizados e executada dentro do ambiente **Ollama**.  
+O projeto utiliza um pipeline seguro de validação de acesso com **Nginx + Nubo Management System (NMS)** para garantir isolamento, autenticação e controle granular sobre cada rota de modelo.
 
 ---
 
-## 🏗 Arquitetura
+## 🚀 Visão Geral da Arquitetura
 
-O sistema é composto por três serviços principais:
+A arquitetura deste projeto combina:
 
-1. **Billumy** — API responsável pela comunicação com o modelo de linguagem  
-2. **Billumy Service** — FastAPI que gerencia as requisições e conversa com MongoDB e Redis  
+### **1. Ollama**
 
-🔌 A aplicação Django e o banco de dados principal rodam fora do projeto e se conectam à API da Billumy para obter insights.
+Servindo os modelos customizados:
+
+- `billumy-14b` → rápido e econômico
+- `billumy-32b` → raciocínio mais robusto
+- `mxbai-embed-large` → geração de embeddings
+
+### **2. Nginx (Servidor)**
+
+Configurado como **site em `sites-available`** para:
+
+- interceptar todas as requisições HTTP/S
+- validar o **Token de Operação (TOC)** via NMS
+- rotear o tráfego para o servidor Ollama
+- garantir logs centralizados, isolamento e regras de acesso corporativas
+
+### **3. Nubo Management System (NMS)**
+
+Responsável por:
+
+- autenticação e autorização do TOC
+- validação de permissões para rotas e modelos específicos
+- registro de auditoria
+- controle granular de uso de modelos de linguagem corporativos
+
+### **4. Billumy (Prompt Engineering)**
+
+Os modelos carregam um sistema prompt personalizado:
+
+> “Você é a Billumy, uma assistente de IA especializada em análise de dados. Todas as respostas devem ser em português, com explicações claras, educadas e profissionais. Este projeto é parte do TCC de Anderson Freitas, sob orientação do Prof. Dr. Ary Henrique Morais Oliveira e Prof. Dr. Eduardo Ribeiro.”
 
 ---
 
-## 🛠 Tecnologias Utilizadas
+## 🛡️ Segurança e Controle de Acesso
 
-- **[FastAPI](https://fastapi.tiangolo.com/)**  
-- **[Ollama](https://ollama.com/)** (execução de modelos LLM localmente)  
-- **MongoDB** (armazenamento das conversas)  
-- **Redis** (cache e controle de contexto)  
-- **Docker & Docker Compose** (ambiente isolado e replicável)  
+A combinação **Nginx + TOC + NMS** fornece:
+
+- 🔐 **Autenticação obrigatória**
+- 🧩 **Validação de permissão por modelo (14B, 32B, embeddings)**
+- 🔍 **Auditoria centralizada**
+- 🧱 **Isolamento entre instâncias**
+- ⚙️ **Consulta dinâmica de permissões antes de rotear ao Ollama**
+
+Isso permite que cada chamada ao modelo seja controlada, rastreável e alinhada com políticas corporativas.
+
+> Observação: A configuração do Nginx fica no servidor, em `/etc/nginx/sites-available/billumy` (ou similar), e não dentro do container.
 
 ---
 
-## ⚙️ Instalação
+## 🏗️ Estrutura do Projeto
 
-### 1️⃣ Clone o repositório  
+```
+
+/
+├─ Modelfile-qwen14b
+├─ Modelfile-qwen32b
+├─ entrypoint.sh
+├─ Dockerfile
+├─ docker-compose.yml
+└─ README.md
+
+```
+
+---
+
+## 🔧 Como funciona a inicialização
+
+O script `entrypoint.sh`:
+
+1. Sobe o servidor Ollama
+2. Aguarda ele ficar disponível
+3. Cria automaticamente:
+   - `billumy-14b`
+   - `billumy-32b`
+4. Puxa o modelo de embeddings na primeira execução
+5. Acessos HTTP passam pelo **Nginx configurado no servidor**, que valida o TOC antes de rotear ao Ollama
+
+---
+
+## 🧪 Exemplos de Uso
+
+### Chat com o modelo 14B
+
 ```bash
-git clone https://github.com/devdinho/Billumy.git
-cd Billumy
+curl https://billumy.a6n.tech/api/chat -H "Authorization: Bearer <TOC>" -d '{
+  "model": "billumy-14b",
+  "messages": [{"role": "user", "content": "Olá, Billumy!"}]
+}'
 ```
 
-### 2️⃣ Variáveis de ambiente  
-Crie um arquivo `.env` com as configurações necessárias:
+### Geração de Embeddings
 
-```env
-MONGO_URL=mongodb://billumy-mongo:27017
-REDIS_URL=redis://billumy-redis:6379
-BILLUMY_URL=http://billumy:11414
-BILLUMY_API_KEY=Seu Token
-```
-
-### 3️⃣ Build e execução dos containers  
 ```bash
-docker compose up -d --build
+curl https://billumy.a6n.tech/api/embed -H "Authorization: Bearer <TOC>" -d '{
+  "model": "mxbai-embed-large",
+  "input": "Texto para embutir"
+}'
 ```
+
+(Nginx valida o TOC antes da requisição chegar ao Ollama)
 
 ---
 
-## 🌐 Acesso
+## 📦 Modelos Utilizados
 
-Após subir os containers, a aplicação estará disponível em:  
-```
-http://localhost:8011
-```
+### 🧩 billumy-14b
 
-## 🚀 Endpoints e Payloads
+Baseado no **Qwen2.5 14B**, balanceado entre velocidade e qualidade.
 
-### Endpoint: `chats/chat/stream`
+### 🧩 billumy-32b
 
-#### Exemplo de Payload
-```json
-{
-  "model": "billumy",
-  "messages": [
-    {
-      "role": "system",
-      "content": "Você é um assistente útil."
-    },
-    {
-      "role": "user",
-      "content": "Quais foram meus maiores gastos este mês?"
-    }
-  ]
-}
-```
+Baseado no **Qwen2.5 32B**, ideal para raciocínio e respostas longas.
 
-#### Exemplo de Resposta
-```json
-{
-  "id": "e9cbc446026341f6819d675d5a01a445",
-  "user_id": "1",
-  "title": null,
-  "created_at": "2025-04-28T00:27:48.180000",
-  "updated_at": "2025-04-28T00:28:07.572000",
-  "data": {
-    "model": "billumy",
-    "messages": [
-      {
-        "role": "system",
-        "content": "Você está interagindo com um assistente de IA."
-      },
-      {
-        "role": "user",
-        "content": "Qual é o clima hoje?"
-      },
-      {
-        "role": "assistant",
-        "content": "O clima hoje está ensolarado com 28°C."
-      }
-    ],
-    "stream": true
-  }
-}
-```
+### 🔎 mxbai-embed-large
 
-## 🔐 Segurança
+Modelo de embeddings de alta performance para uso em pipelines RAG e buscas semânticas.
 
-- Requisições só são aceitas com **token válido** no header  
-- Comunicação feita localmente por padrão (`localhost:8011`)  
-- Pode ser facilmente adaptado para HTTPS com certificados
+---
+
+## 🛠️ Customização
+
+- **Temperatura**
+- **Contexto máximo**
+- **Prompt do sistema Billumy**
+- **Regras de acesso no NMS**
+- **Interceptação e roteamento via Nginx no servidor**
+
+---
+
+## 📚 Tecnologias Empregadas
+
+- **Ollama** – Servidor local de LLMs
+- **Qwen2.5** – Base dos modelos de linguagem
+- **mxbai-embed-large** – Embeddings otimizados
+- **Nginx (servidor)** – Proxy reverso + camada de segurança
+- **NMS (Nubo Management System)** – Autorização corporativa
+- **Docker** – Empacotamento do ambiente
+- **Shell Script** – Automação do bootstrap
 
 ---
 
 ## 📄 Licença
 
-Este projeto está licenciado sob a **MIT License**.  
-Confira o arquivo [`LICENSE`](LICENSE) para mais informações.
+MIT. Livre para usar, modificar e contribuir.
