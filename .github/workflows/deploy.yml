@@ -19,7 +19,7 @@ jobs:
           host: ${{ secrets.VM_IP }}
           username: ${{ secrets.VM_USER }}
           password: ${{ secrets.VM_PASSKEY }}
-          port: 20222
+          port: 22
           script: |
             cd ${{ secrets.VM_PWD }}
 
