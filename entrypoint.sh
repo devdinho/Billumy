@@ -24,4 +24,8 @@ if ! ollama list | grep -q "mxbai-embed-large"; then
     ollama pull mxbai-embed-large
 fi
 
+# Puxar modelo de classificação de perguntas
+if ! ollama list | grep -q "maestro"; then
+    ollama create maestro -f /app/Modelfile-qwenMaestro
+fi
 wait

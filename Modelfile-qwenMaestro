@@ -1,0 +1,6 @@
+FROM qwen2.5:1.5b
+
+PARAMETER temperature 0.1
+PARAMETER num_ctx 4096
+
+SYSTEM "Classifique perguntas em: simples, media ou profunda"
