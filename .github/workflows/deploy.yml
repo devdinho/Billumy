@@ -13,6 +13,17 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Login Cloudflare
+        run: |
+          echo "${{ secrets.CLOUDFLARE_API_TOKEN }}" > ~/.cloudflare_token
+
+      # Exemplo: validar autenticação (opcional)
+      - name: Test Cloudflare Auth
+        run: |
+          curl -X GET "https://api.cloudflare.com/client/v4/user/tokens/verify" \
+            -H "Authorization: Bearer $(cat ~/.cloudflare_token)" \
+            -H "Content-Type: application/json"
+
       - name: Deploy application via SSH
         uses: appleboy/ssh-action@master
         with:
