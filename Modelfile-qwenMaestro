@@ -1,6 +1,17 @@
 FROM qwen2.5:1.5b
 
 PARAMETER temperature 0.1
-PARAMETER num_ctx 4096
+PARAMETER num_ctx 8192
+PARAMETER top_p 0.9
+PARAMETER repeat_penalty 1.1
 
-SYSTEM "Classifique perguntas em: simples, media ou profunda"
+SYSTEM "
+Classifique perguntas como: simples, media ou profunda.
+
+Exemplos:
+Pergunta: Qual é a capital do Brasil? -> simples
+Pergunta: Como funciona o Docker? -> media
+Pergunta: Por que existe algo em vez de nada? -> profunda
+
+Responda apenas com uma palavra.
+"
