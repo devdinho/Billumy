@@ -17,8 +17,9 @@ A arquitetura deste projeto combina:
 
 Servindo os modelos customizados:
 
-- `billumy-14b` → rápido e econômico
-- `billumy-32b` → raciocínio mais robusto
+- `billumy-qwen14b` → rápido e econômico (14B parâmetros)
+- `billumy-qwen32b` → raciocínio mais robusto (32B parâmetros)
+- `billumy-maestro` → classificador de complexidade de perguntas (1.5B parâmetros)
 - `mxbai-embed-large` → geração de embeddings
 
 ### **2. Nginx (Servidor)**
@@ -66,15 +67,14 @@ Isso permite que cada chamada ao modelo seja controlada, rastreável e alinhada 
 ## 🏗️ Estrutura do Projeto
 
 ```
-
 /
-├─ Modelfile-qwen14b
-├─ Modelfile-qwen32b
-├─ entrypoint.sh
-├─ Dockerfile
-├─ docker-compose.yml
-└─ README.md
-
+├─ Modelfile-qwen14b      # Modelo Qwen 14B customizado
+├─ Modelfile-qwen32b      # Modelo Qwen 32B customizado
+├─ Modelfile-qwenMaestro  # Modelo classificador de complexidade
+├─ entrypoint.sh          # Script de inicialização automática
+├─ Dockerfile             # Imagem Docker do Ollama
+├─ docker-compose.yml     # Orquestração do ambiente
+└─ README.md              # Documentação do projeto
 ```
 
 ---
@@ -86,10 +86,13 @@ O script `entrypoint.sh`:
 1. Sobe o servidor Ollama
 2. Aguarda ele ficar disponível
 3. Cria automaticamente:
-   - `billumy-14b`
-   - `billumy-32b`
+   - `billumy-qwen14b` (a partir do Modelfile-qwen14b)
+   - `billumy-qwen32b` (a partir do Modelfile-qwen32b)
+   - `billumy-maestro` (a partir do Modelfile-qwenMaestro)
 4. Puxa o modelo de embeddings na primeira execução
 5. Acessos HTTP passam pelo **Nginx configurado no servidor**, que valida o TOC antes de rotear ao Ollama
+
+> **Nota importante**: Os Modelfiles usam o comando `SYSTEM` (não `PARAMETER system`) para definir o prompt do sistema, conforme especificação do Ollama.
 
 ---
 
@@ -99,8 +102,17 @@ O script `entrypoint.sh`:
 
 ```bash
 curl https://billumy.a6n.tech/api/chat -H "Authorization: Bearer <TOC>" -d '{
-  "model": "billumy-14b",
+  "model": "billumy-qwen14b",
   "messages": [{"role": "user", "content": "Olá, Billumy!"}]
+}'
+```
+
+### Classificação de complexidade com Maestro
+
+```bash
+curl https://billumy.a6n.tech/api/chat -H "Authorization: Bearer <TOC>" -d '{
+  "model": "billumy-maestro",
+  "messages": [{"role": "user", "content": "Qual é a capital do Brasil?"}]
 }'
 ```
 
@@ -119,13 +131,17 @@ curl https://billumy.a6n.tech/api/embed -H "Authorization: Bearer <TOC>" -d '{
 
 ## 📦 Modelos Utilizados
 
-### 🧩 billumy-14b
+### 🧩 billumy-qwen14b
 
-Baseado no **Qwen2.5 14B**, balanceado entre velocidade e qualidade.
+Baseado no **Qwen2.5 14B**, balanceado entre velocidade e qualidade. Ideal para consultas rápidas e análise de dados.
 
-### 🧩 billumy-32b
+### 🧩 billumy-qwen32b
 
-Baseado no **Qwen2.5 32B**, ideal para raciocínio e respostas longas.
+Baseado no **Qwen2.5 32B**, ideal para raciocínio complexo e respostas longas e detalhadas.
+
+### 🎯 billumy-maestro
+
+Baseado no **Qwen2.5 1.5B**, classificador especializado que identifica a complexidade de perguntas (simples, média ou profunda) para roteamento inteligente.
 
 ### 🔎 mxbai-embed-large
 
